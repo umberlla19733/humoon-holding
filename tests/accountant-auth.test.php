@@ -47,6 +47,23 @@ try {
     check_auth(hamun_pending_accountant()===null,'stale pending session revoked');
     check_auth(hamun_reset_user_password($disabledId,'reset-disabled-password')['enabled']===false,'reset does not enable account');
     try {hamun_reset_user_password(str_repeat('c',32),'strong-missing-password');throw new Exception('unknown account accepted');} catch(InvalidArgumentException $e) {}
+    // Explicit administrator provisioning creates or resets only the matching accountant.
+    $temporaryId='9876543210';$temporaryDigest=hamun_national_digest($temporaryId);
+    hamun_provision_accountant($temporaryId,'short-test');
+    $provisioned=hamun_accounts(function (&$users)use($temporaryDigest){foreach($users as $u)if(($u['national_digest']??'')===$temporaryDigest)return $u;return null;});
+    check_auth($provisioned['role']==='accountant' && $provisioned['must_change_password'] && password_verify('short-test',$provisioned['password']),'temporary accountant created');
+    $_SESSION=['user_id'=>$provisioned['id'],'user_version'=>$provisioned['version'],'admin_until'=>time()+600];
+    check_auth(hamun_current_user()===null,'temporary password is not a full session');
+    hamun_provision_accountant($temporaryId,'different-test');
+    $updated=hamun_accounts(function (&$users)use($temporaryDigest){return array_values(array_filter($users,function($u)use($temporaryDigest){return ($u['national_digest']??'')===$temporaryDigest;}));});
+    check_auth(count($updated)===1 && $updated[0]['version']===$provisioned['version']+1 && password_verify('different-test',$updated[0]['password']),'existing account reset, no duplicate');
+    hamun_accounts(function (&$users)use($temporaryDigest){foreach($users as &$u)if(($u['national_digest']??'')===$temporaryDigest)$u['enabled']=false;});
+    hamun_provision_accountant($temporaryId,'third-test');
+    $updated=hamun_accounts(function (&$users)use($temporaryDigest){foreach($users as $u)if(($u['national_digest']??'')===$temporaryDigest)return $u;});
+    check_auth(!$updated['enabled'],'reset does not enable disabled account');
+    $otherId='9876543211';$otherDigest=hamun_national_digest($otherId);
+    hamun_accounts(function (&$users)use($otherDigest){$users[]=['id'=>'non-accountant','role'=>'staff','national_digest'=>$otherDigest];});
+    try {hamun_provision_accountant($otherId,'short-test');throw new Exception('other role overwritten');} catch(RuntimeException $e) {}
     $digestA=str_repeat('a',64);$digestB=str_repeat('b',64);
     $sample=[['role'=>'staff','national_digest'=>$digestA,'developer_access'=>true],['role'=>'admin','national_digest'=>$digestB,'developer_access'=>true],['role'=>'admin','national_digest'=>$digestA,'developer_access'=>false]];
     check_auth(hamun_find_bot_developer($sample,$digestA)===null,'staff and ordinary admin are not developer');

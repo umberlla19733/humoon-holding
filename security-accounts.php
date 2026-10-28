@@ -92,6 +92,28 @@ function hamun_reset_user_password(string $id, string $password): array {
         throw new InvalidArgumentException('حساب پیدا نشد.');
     });
 }
+// Only call from an authenticated administrator action protected by CSRF.
+// The temporary password must be changed before any accounting access is granted.
+function hamun_provision_accountant(string $nationalId, string $temporaryPassword): void {
+    $nationalId=hamun_national_id($nationalId);
+    $digest=hamun_national_digest($nationalId);
+    if ($temporaryPassword==='' || strlen($temporaryPassword)>72) throw new InvalidArgumentException('رمز موقت نامعتبر است.');
+    $hash=password_hash($temporaryPassword,PASSWORD_DEFAULT);
+    if (!is_string($hash) || $hash==='') throw new RuntimeException('تولید هش رمز ناموفق بود.');
+    hamun_accounts(function (&$users) use ($digest,$hash) {
+        foreach ($users as &$u) {
+            if (empty($u['national_digest']) || !hash_equals((string)$u['national_digest'],$digest)) continue;
+            if (($u['role']??'')!=='accountant') throw new RuntimeException('این کد ملی برای نقش دیگری ثبت شده است.');
+            $u['password']=$hash;
+            $u['must_change_password']=true;
+            $u['version']=(int)$u['version']+1;
+            return;
+        }
+        unset($u);
+        $id=bin2hex(random_bytes(16));
+        $users[]=['id'=>$id,'username'=>'acc-'.$id,'display_name'=>'حسابدار','password'=>$hash,'role'=>'accountant','sections'=>[],'enabled'=>true,'version'=>1,'national_digest'=>$digest,'must_change_password'=>true];
+    });
+}
 // National-ID shortcut selects a developer account only; it never authenticates it.
 function hamun_bot_selected_digest(array $session, int $now): string {
     $digest=$session['bot_identity_digest']??null;
