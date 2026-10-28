@@ -23,7 +23,8 @@ const main = await readFile(new URL('../assets/index-D7AjnQ7W.js', import.meta.u
 const gate = await readFile(new URL('../admin-security.php', import.meta.url), 'utf8');
 assert.match(main, /hamunIsPortalShortcut\(t\)\?`درخواست ورود مدیریت`:t/);
 assert.match(main, /hamunGate\(\)\.then/);
-assert.match(gate, /\$authenticated = \$currentUser !== null && \$currentUser\['role'\] === 'admin'/);
+assert.match(gate, /\$isAdmin = \$currentUser !== null && \$currentUser\['role'\] === 'admin'/);
+assert.match(gate, /hamun_accountant_file_allowed/);
 assert.match(gate, /password_verify/);
 assert.match(gate, /hash_equals\(\$_SESSION\['csrf'\]/);
 const admin = await readFile(new URL('../assets/AdminApp--kXxpmTx.js', import.meta.url), 'utf8');
