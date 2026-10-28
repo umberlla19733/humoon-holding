@@ -1,5 +1,15 @@
+// This legacy number is only a public UI shortcut, not a password or an authorization check.
+// Actual access is protected by the PHP session and server-side account validation.
+export function isBotPortalShortcut(message) {
+  if (typeof message !== 'string') return false;
+  const digits = message.replace(/[۰-۹]/g, c => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(c)))
+    .replace(/[٠-٩]/g, c => String('٠١٢٣٤٥٦٧٨٩'.indexOf(c)))
+    .replace(/[\s\u200c\u200e\u200f]/g, '');
+  return digits === '1160585431';
+}
 // Public, rule-based guidance. Never use this module to expose personnel data.
 export function conversationReply(message) {
+  if (isBotPortalShortcut(message)) return {text: 'مسیر ورود مدیریت آماده است. برای ورود، حساب و رمز خود را فقط در صفحه ورود امن وارد کنید؛ رمز را در گفت‌وگو ننویسید.', secretPortalUnlocked: true};
   const text = message.toLowerCase().replace(/[يى]/g, 'ی').replace(/ك/g, 'ک')
     .replace(/[‌\u200e\u200f]/g, ' ').replace(/\s+/g, ' ').trim();
   const has = (...words) => words.some(word => text.includes(word));
