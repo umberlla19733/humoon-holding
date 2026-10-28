@@ -16,11 +16,13 @@ const td = store.slice(store.indexOf('function td(){'),store.indexOf('function n
 assert.ok(qu.startsWith('function Qu()') && td.startsWith('function td()'));
 const make = (local) => {
  const ctx = vm.createContext({window:{}, Pu:false,Iu:false,Y:{},Bu:{},Lu:null,treasuryCalls:0,coreCalls:0,
-   yu:()=>local, Zu:()=>{ctx.coreCalls++}, ed:()=>{ctx.treasuryCalls++}});
+   yu:()=>local, hamunLocalAccounting:()=>local.exists ?? ((local.invoices?.length||0)>0 || (local.treasury?.length||0)>0), Zu:()=>{ctx.coreCalls++}, ed:()=>{ctx.treasuryCalls++}});
  vm.runInContext(qu+td,ctx); return ctx;
 };
 const saved=make({invoices:[],treasury:[{id:'local'}]}); saved.td();
 assert.equal(saved.Y.treasury[0].id,'local'); assert.equal(saved.treasuryCalls,0);
 const fresh=make({invoices:[],treasury:[]}); fresh.td(); fresh.td();
 assert.equal(fresh.treasuryCalls,1);
+const emptySaved=make({exists:true,invoices:[],treasury:[]}); emptySaved.td();
+assert.equal(emptySaved.treasuryCalls,0); assert.equal(emptySaved.coreCalls,0);
 console.log('extra expense tests passed');
