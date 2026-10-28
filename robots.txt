@@ -1,0 +1,16 @@
+# Robots.txt for Hamun Industrial Holding (هلدینگ صنعتی هامون)
+User-agent: *
+Allow: /
+Allow: /#stores
+Allow: /#companies
+Allow: /#gallery
+Allow: /#about
+Allow: /#contact
+Disallow: /api/
+Disallow: /#/admin
+
+# Crawler speed
+Crawl-delay: 1
+
+# Sitemaps
+Sitemap: https://hamun-holding.ir/sitemap.xml

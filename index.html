@@ -3,17 +3,166 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="هلدینگ صنعتی هامون — تراشکاری CNC، تولید کاسه نمد، پکینگ و سیستم‌های آب‌بندی، ساخت جک و سیلندر هیدرولیک" />
+    <script>
+      // Suppress benign Vite HMR WebSocket connection errors in sandbox iframe
+      window.addEventListener('error', function(event) {
+        var msg = event && (event.message || '');
+        var src = (event && event.filename) || '';
+        var stack = (event && event.error && event.error.stack) || '';
+        if (
+          msg.indexOf('WebSocket') !== -1 ||
+          msg.indexOf('createWebSocketModuleRunnerTransport') !== -1 ||
+          src.indexOf('@vite/client') !== -1 ||
+          stack.indexOf('createWebSocketModuleRunnerTransport') !== -1
+        ) {
+          event.stopImmediatePropagation && event.stopImmediatePropagation();
+          event.stopPropagation && event.stopPropagation();
+          event.preventDefault && event.preventDefault();
+          return true;
+        }
+      }, true);
+
+      window.addEventListener('unhandledrejection', function(event) {
+        var reason = event && event.reason;
+        var msg = (reason && reason.message) || '';
+        var stack = (reason && reason.stack) || '';
+        if (
+          msg.indexOf('WebSocket') !== -1 ||
+          msg.indexOf('createWebSocketModuleRunnerTransport') !== -1 ||
+          stack.indexOf('createWebSocketModuleRunnerTransport') !== -1
+        ) {
+          event.stopImmediatePropagation && event.stopImmediatePropagation();
+          event.stopPropagation && event.stopPropagation();
+          event.preventDefault && event.preventDefault();
+        }
+      }, true);
+    </script>
     <title>هلدینگ صنعتی هامون | تراشکاری، کاسه نمد و پکینگ</title>
+    <meta name="description" content="هلدینگ صنعتی هامون — تراشکاری CNC، تولید کاسه نمد، پکینگ و سیستم‌های آب‌بندی، ساخت جک و سیلندر هیدرولیک، بلبرینگ SKF اصل و اتصالات صنعتی زرین‌شهر" />
+    <meta name="keywords" content="هلدینگ صنعتی هامون, تراشکاری CNC زرین شهر, تولید کاسه نمد اصفهان, پکینگ هیدرولیک, سیل هیدرولیک, جک هیدرولیک صنعتی, بلبرینگ SKF, رولبرینگ بشکه ای, کوپلینگ خورشیدی, اورینگ وایتون, قطعات صنعتی اصفهان" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    <meta name="author" content="هلدینگ صنعتی هامون" />
+    <link rel="canonical" href="https://hamun-holding.ir/" />
+
+    <!-- OpenGraph / Social Sharing -->
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="fa_IR" />
+    <meta property="og:site_name" content="هلدینگ صنعتی هامون" />
+    <meta property="og:title" content="هلدینگ صنعتی هامون | تراشکاری، کاسه نمد، پکینگ و بلبرینگ" />
+    <meta property="og:description" content="مرکز تخصصی تراشکاری CNC، ساخت سیلندر هیدرولیک، تولید کاسه نمد سنوک و توتو، بانک جامع پکینگ و اورینگ و بلبرینگ‌های صنعتی SKF در زرین‌شهر و اصفهان." />
+    <meta property="og:url" content="https://hamun-holding.ir/" />
+    <meta property="og:image" content="/images/hamun/machining-lathe.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="هلدینگ صنعتی هامون — خطوط تولید و کارگاه تراشکاری" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="هلدینگ صنعتی هامون | تراشکاری، کاسه نمد، پکینگ و بلبرینگ" />
+    <meta name="twitter:description" content="بانک قطعات صنعتی، تراشکاری دقیق، سیل‌ها و جک‌های هیدرولیک با سابقه از سال ۱۳۶۷ در اصفهان." />
+    <meta name="twitter:image" content="/images/hamun/machining-lathe.jpg" />
+
+    <!-- Favicon & Manifest -->
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+
+    <!-- Google Fonts: Vazirmatn & Space Grotesk -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-    <style>
-      html { background: #0a0d12; }
-    </style>
+
+    <!-- Schema.org Rich Structured Data (JSON-LD) for Search Engine Crawlers -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://hamun-holding.ir/#organization",
+          "name": "هلدینگ صنعتی هامون",
+          "alternateName": "Hamun Industrial Holding",
+          "url": "https://hamun-holding.ir/",
+          "logo": "https://hamun-holding.ir/images/hamun/machining-lathe.jpg",
+          "foundingDate": "1988",
+          "description": "تراشکاری سنگین و سبک CNC، تولید کاسه نمد، تأمین انواع پکینگ هیدرولیک و پنوماتیک، ساخت جک هیدرولیک و عرضه بلبرینگ‌های صنعتی SKF",
+          "contactPoint": [
+            {
+              "@type": "ContactPoint",
+              "telephone": "+98-31-52210607",
+              "contactType": "customer service",
+              "areaServed": "IR",
+              "availableLanguage": ["Persian"]
+            },
+            {
+              "@type": "ContactPoint",
+              "telephone": "+98-9021291871",
+              "contactType": "sales",
+              "areaServed": "IR"
+            }
+          ],
+          "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "میدان امام حسین، بلوار بسیج، جنب تراشکاری صداقت",
+            "addressLocality": "زرین‌شهر",
+            "addressRegion": "اصفهان",
+            "addressCountry": "IR"
+          },
+          "sameAs": [
+            "https://instagram.com/hamun_industrial",
+            "https://t.me/hamun_industrial",
+            "https://wa.me/989021291871",
+            "https://eitaa.com/hamun_holding",
+            "https://ble.ir/hamun_holding",
+            "https://rubika.ir/hamun_holding",
+            "https://linkedin.com/company/hamun-holding",
+            "https://aparat.com/hamun_industrial"
+          ]
+        },
+        {
+          "@type": "AutoPartsStore",
+          "@id": "https://hamun-holding.ir/#store",
+          "name": "فروشگاه‌های تخصصی هلدینگ صنعتی هامون",
+          "image": "https://hamun-holding.ir/images/hamun/seals-shelves.jpg",
+          "telephone": "+98-31-52210607",
+          "priceRange": "$$",
+          "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "زرین‌شهر، میدان امام حسین، بلوار بسیج",
+            "addressLocality": "زرین‌شهر",
+            "addressRegion": "اصفهان",
+            "addressCountry": "IR"
+          },
+          "openingHoursSpecification": [
+            {
+              "@type": "OpeningHoursSpecification",
+              "dayOfWeek": ["Saturday", "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday"],
+              "opens": "07:30",
+              "closes": "19:30"
+            }
+          ]
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://hamun-holding.ir/#website",
+          "url": "https://hamun-holding.ir/",
+          "name": "هلدینگ صنعتی هامون",
+          "description": "پورتال جامع استعلام قطعات، تراشکاری CNC، پکینگ و بلبرینگ صنعتی",
+          "inLanguage": "fa-IR",
+          "publisher": {
+            "@id": "https://hamun-holding.ir/#organization"
+          }
+        }
+      ]
+    }
+    </script>
+
+    <style>html{--lightningcss-light: ;--lightningcss-dark:initial;color-scheme:dark;background:#0a0d12}</style>
+    <script type="module" crossorigin src="/assets/index-D7AjnQ7W.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-BWaJ3C7D.js">
+    <link rel="modulepreload" crossorigin href="/assets/fa-Ckt9yYap.js">
+    <link rel="modulepreload" crossorigin href="/assets/store-9cctwGcq.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-r85kdkuM.css">
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
