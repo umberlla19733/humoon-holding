@@ -5,6 +5,8 @@ DirectoryIndex index.html
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
+  # Private admin resources must go through the PHP session gate before -f.
+  RewriteRule ^(data/(?:acc|ledger)/[A-Za-z0-9_.-]+\.json|data/private/inventory/(?:bearings|fasteners|machining|packing)\.json|data/db/messages\.json|assets/(?:AdminApp--kXxpmTx|PersonnelMonitor-DY0aHlA6|AccountingPanel-CQf-TkFh|FinancialLedgerPanel-DYq0Kv-Z|SecurityAndAccessControl-DY-Y0UBZ|Inbox-CK8frSJ0)\.js)$ admin-security.php?action=file&path=$1 [L,NC]
   # فایل‌ها و پوشه‌های واقعی مستقیم سرو شوند
   RewriteCond %{REQUEST_FILENAME} -f [OR]
   RewriteCond %{REQUEST_FILENAME} -d
@@ -20,6 +22,15 @@ DirectoryIndex index.html
   AddType text/css .css
   AddType application/javascript .js
   AddType application/gzip .gz
+</IfModule>
+
+# Basic response hardening; HTTPS-only HSTS avoids instructing HTTP clients.
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set Permissions-Policy "camera=(), microphone=(self), geolocation=(self)"
+  Header always set Strict-Transport-Security "max-age=31536000" "expr=%{HTTPS} == 'on'"
 </IfModule>
 
 # مدل صوتی آفلاین فایرفاکس: یک‌بار دانلود و برای همیشه کش مرورگر می‌شود
@@ -46,5 +57,11 @@ DirectoryIndex index.html
 
 # محافظت از فایل‌های حساس احتمالی
 <FilesMatch "\.(md|log|sql|sqlite|zip)$">
+  Require all denied
+</FilesMatch>
+
+# Fallback denial if the PHP rewrite gate is unavailable. The rewritten request
+# is to admin-security.php, so authorized delivery is handled by PHP instead.
+<FilesMatch "^(AdminApp--kXxpmTx|PersonnelMonitor-DY0aHlA6|AccountingPanel-CQf-TkFh|FinancialLedgerPanel-DYq0Kv-Z|SecurityAndAccessControl-DY-Y0UBZ|Inbox-CK8frSJ0)\.js$">
   Require all denied
 </FilesMatch>

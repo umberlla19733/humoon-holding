@@ -1,0 +1,12 @@
+import { readFile } from 'node:fs/promises';
+import assert from 'node:assert/strict';
+const source = await readFile(new URL('../assets/hamun-conversation.js', import.meta.url), 'utf8');
+const { conversationReply } = await import('data:text/javascript;base64,' + Buffer.from(source).toString('base64'));
+assert.match(conversationReply('سلام').text, /خوش آمدید/);
+assert.match(conversationReply('مرخصی کاركنان').text, /اطلاعات شخصی/);
+assert.match(conversationReply('نحوه سفارش').text, /کالا/);
+assert.match(conversationReply('میخواهم با اپراتور صحبت کنم').text, /تماس/);
+assert.match(conversationReply('شرایط گارانتی چیست').text, /تماس/);
+assert.equal(conversationReply('بلبرینگ ۶۲۰۵'), null);
+assert.equal(conversationReply('قیمت کاسه نمد ۵۰'), null);
+console.log('conversation tests passed');

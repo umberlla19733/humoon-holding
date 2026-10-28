@@ -1,0 +1,28 @@
+name: Build full distribution
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout selected branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+      - name: Create ZIP
+        run: python3 scripts/build_dist.py
+      - name: Commit ZIP to selected branch
+        env:
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f dist/humoon-holding-full.zip
+          if git diff --cached --quiet; then
+            echo "ZIP is already up to date."
+          else
+            git commit -m "Update full distribution ZIP"
+            git push origin "HEAD:refs/heads/$BRANCH"
+          fi
