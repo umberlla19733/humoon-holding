@@ -49,11 +49,13 @@ try {
     try {hamun_reset_user_password(str_repeat('c',32),'strong-missing-password');throw new Exception('unknown account accepted');} catch(InvalidArgumentException $e) {}
     // Explicit administrator provisioning creates or resets only the matching accountant.
     $temporaryId='9876543210';$temporaryDigest=hamun_national_digest($temporaryId);
-    hamun_provision_accountant($temporaryId,'short-test');
+    hamun_provision_accountant($temporaryId,$temporaryId);
     $provisioned=hamun_accounts(function (&$users)use($temporaryDigest){foreach($users as $u)if(($u['national_digest']??'')===$temporaryDigest)return $u;return null;});
-    check_auth($provisioned['role']==='accountant' && $provisioned['must_change_password'] && password_verify('short-test',$provisioned['password']),'temporary accountant created');
+    check_auth($provisioned['role']==='accountant' && $provisioned['must_change_password'] && password_verify($temporaryId,$provisioned['password']),'national-ID-only first login configured');
     $_SESSION=['user_id'=>$provisioned['id'],'user_version'=>$provisioned['version'],'admin_until'=>time()+600];
     check_auth(hamun_current_user()===null,'temporary password is not a full session');
+    $_SESSION=['pending_user_id'=>$provisioned['id'],'pending_user_version'=>$provisioned['version'],'pending_until'=>time()+600];
+    check_auth(hamun_pending_accountant()['id']===$provisioned['id'],'first login receives only password-setup session');
     hamun_provision_accountant($temporaryId,'different-test');
     $updated=hamun_accounts(function (&$users)use($temporaryDigest){return array_values(array_filter($users,function($u)use($temporaryDigest){return ($u['national_digest']??'')===$temporaryDigest;}));});
     check_auth(count($updated)===1 && $updated[0]['version']===$provisioned['version']+1 && password_verify('different-test',$updated[0]['password']),'existing account reset, no duplicate');
