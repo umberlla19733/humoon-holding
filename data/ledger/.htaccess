@@ -1,0 +1,2 @@
+# Fail closed if the parent rewrite gate is unavailable.
+Require all denied
