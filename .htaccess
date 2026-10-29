@@ -5,6 +5,12 @@ DirectoryIndex index.html
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
+  # Preserve old image URLs while retaining only one copy of each file.
+  RewriteRule ^images/div-cnc\.jpg$ /images/hamun/weida-closeup.jpg [R=301,L,NC]
+  RewriteRule ^images/div-felt\.jpg$ /images/hamun/stg-bearings-seals.jpg [R=301,L,NC]
+  RewriteRule ^images/div-hydraulic\.jpg$ /images/hamun/machining-lathe.jpg [R=301,L,NC]
+  RewriteRule ^images/div-packing\.jpg$ /images/hamun/seals-shelves.jpg [R=301,L,NC]
+  RewriteRule ^images/factory\.jpg$ /images/hamun/workshop-main.jpg [R=301,L,NC]
   # Private admin resources must go through the PHP session gate before -f.
   RewriteRule ^(data/(?:acc|ledger)/[A-Za-z0-9_.-]+\.json|data/private/inventory/(?:bearings|fasteners|machining|packing)\.json|data/db/messages\.json|assets/(?:AdminApp--kXxpmTx|PersonnelMonitor-DY0aHlA6|AccountingPanel-CQf-TkFh|FinancialLedgerPanel-DYq0Kv-Z|SecurityAndAccessControl-DY-Y0UBZ|Inbox-CK8frSJ0)\.js)$ admin-security.php?action=file&path=$1 [L,NC]
   # فایل‌ها و پوشه‌های واقعی مستقیم سرو شوند
