@@ -8,6 +8,14 @@ require $root.'/site/security-accounts.php';
 $dir=$root.'/hamun-private';$token=str_repeat('a',40);
 try {
     try {hamun_initial_setup($dir,$token,'admin-example','long-password-example');throw new Exception('missing token accepted');} catch(RuntimeException $e) {}
+    hamun_prepare_setup_token($dir,$root.'/site');
+    $created=trim(file_get_contents($dir.'/setup-token'));
+    setup_check((bool)preg_match('/^[a-f0-9]{64}$/D',$created),'secure token generated');
+    hamun_prepare_setup_token($dir,$root.'/site');
+    setup_check(trim(file_get_contents($dir.'/setup-token'))===$created,'public requests do not rotate token');
+    try {hamun_prepare_setup_token($root.'/site/hamun-private',$root.'/site');throw new Exception('public path accepted');} catch(RuntimeException $e) {}
+    try {hamun_prepare_setup_token($dir,'/');throw new Exception('root document root accepted');} catch(RuntimeException $e) {}
+    try {hamun_prepare_setup_token($dir,$root.'/missing');throw new Exception('unknown document root accepted');} catch(RuntimeException $e) {}
     file_put_contents($dir.'/setup-token',$token);
     try {hamun_initial_setup($dir,str_repeat('b',40),'admin-example','long-password-example');throw new Exception('bad token accepted');} catch(InvalidArgumentException $e) {}
     try {hamun_initial_setup($dir,$token,'bad name','long-password-example');throw new Exception('bad username accepted');} catch(InvalidArgumentException $e) {}
@@ -23,6 +31,7 @@ try {
     $users=json_decode(file_get_contents($dir.'/accounts.json'),true);
     setup_check(count($users)===1 && $users[0]['username']==='admin-example' && $users[0]['role']==='admin' && password_verify('long-password-example',$users[0]['password']),'valid admin account');
     setup_check(!file_exists($dir.'/setup-token'),'token removed after success');
+    try {hamun_prepare_setup_token($dir,$root.'/site');throw new Exception('token recreated after setup');} catch(RuntimeException $e) {}
     setup_check(strpos(file_get_contents($dir.'/accounts.json'),'long-password-example')===false,'password not stored in plaintext');
     $_SESSION=['user_id'=>$users[0]['id'],'user_version'=>1,'admin_until'=>time()+600];
     setup_check(hamun_current_user()['username']==='admin-example','existing authentication recognizes account');

@@ -66,6 +66,18 @@ try {
     $otherId='9876543211';$otherDigest=hamun_national_digest($otherId);
     hamun_accounts(function (&$users)use($otherDigest){$users[]=['id'=>'non-accountant','role'=>'staff','national_digest'=>$otherDigest];});
     try {hamun_provision_accountant($otherId,'short-test');throw new Exception('other role overwritten');} catch(RuntimeException $e) {}
+    // Self-service change checks the current password, current version and account state.
+    $selfId=str_repeat('e',32);
+    hamun_accounts(function (&$users)use($selfId){$users[]=['id'=>$selfId,'username'=>'self-test','role'=>'staff','enabled'=>true,'version'=>1,'password'=>password_hash('correct-old-password',PASSWORD_DEFAULT)];});
+    try {hamun_change_own_password($selfId,1,'incorrect','new-strong-password');throw new Exception('wrong password accepted');} catch(InvalidArgumentException $e) {}
+    try {hamun_change_own_password($selfId,1,'correct-old-password','short');throw new Exception('weak password accepted');} catch(InvalidArgumentException $e) {}
+    $selfResult=hamun_change_own_password($selfId,1,'correct-old-password','new-strong-password');
+    check_auth($selfResult['version']===2,'own password increments session version');
+    $_SESSION=['user_id'=>$selfId,'user_version'=>1,'admin_until'=>time()+600];check_auth(hamun_current_user()===null,'other sessions revoked');
+    $_SESSION['user_version']=2;check_auth(hamun_current_user()['id']===$selfId,'updated session remains usable');
+    try {hamun_change_own_password($selfId,1,'new-strong-password','another-strong-password');throw new Exception('stale session accepted');} catch(RuntimeException $e) {}
+    hamun_accounts(function (&$users)use($selfId){foreach($users as &$u)if($u['id']===$selfId)$u['enabled']=false;});
+    try {hamun_change_own_password($selfId,2,'new-strong-password','another-strong-password');throw new Exception('disabled user accepted');} catch(RuntimeException $e) {}
     $digestA=str_repeat('a',64);$digestB=str_repeat('b',64);
     $sample=[['role'=>'staff','national_digest'=>$digestA,'developer_access'=>true],['role'=>'admin','national_digest'=>$digestB,'developer_access'=>true],['role'=>'admin','national_digest'=>$digestA,'developer_access'=>false]];
     check_auth(hamun_find_bot_developer($sample,$digestA)===null,'staff and ordinary admin are not developer');
