@@ -91,6 +91,22 @@ function hamun_change_own_password(string $id, int $version, string $oldPassword
         throw new RuntimeException('حساب پیدا نشد.');
     });
 }
+// Only for the current developer session established by owner-login.php. The caller
+// must check the session marker, CSRF, rate limit and authenticated session first.
+function hamun_set_owner_session_password(string $id, int $version, string $password): array {
+    return hamun_accounts(function (&$users) use ($id,$version,$password) {
+        foreach ($users as &$account) {
+            if (!hash_equals((string)$account['id'],$id)) continue;
+            if (($account['role']??'')!=='admin' || empty($account['developer_access']) || empty($account['enabled']) || !empty($account['must_change_password']) || (int)$account['version']!==$version) throw new RuntimeException('حساب تغییر کرده است؛ دوباره وارد شوید.');
+            if (!hamun_valid_new_password($password,(string)($account['national_digest']??''))) throw new InvalidArgumentException('رمز باید حداقل ۱۲ نویسه غیرخالی و حداکثر ۷۲ بایت باشد.');
+            $hash=password_hash($password,PASSWORD_DEFAULT);
+            if (!is_string($hash) || $hash==='') throw new RuntimeException('تغییر رمز ممکن نیست.');
+            $account['password']=$hash;$account['version']=(int)$account['version']+1;
+            return ['id'=>$account['id'],'version'=>$account['version']];
+        }
+        throw new RuntimeException('حساب پیدا نشد.');
+    });
+}
 // Caller must authenticate an administrator and verify CSRF before invoking this function.
 // Every reset invalidates all existing full and first-login sessions for that account.
 function hamun_reset_user_password(string $id, string $password): array {
@@ -108,6 +124,38 @@ function hamun_reset_user_password(string $id, string $password): array {
         }
         throw new InvalidArgumentException('حساب پیدا نشد.');
     });
+}
+// Only call from an authenticated administrator action protected by CSRF.
+function hamun_create_quick_member(string $username, string $displayName, string $role, string $password, string $repeat, array $sections): void {
+    $username=strtolower(trim($username));$displayName=trim($displayName);
+    if (!preg_match('/^[a-z0-9_.-]{3,40}$/D',$username) || preg_match('/^[0-9]{10}$/D',$username) || strlen($displayName)>300 || !in_array($role,['admin','staff'],true)) throw new InvalidArgumentException('نام کاربری، نام یا نقش معتبر نیست.');
+    if (!hash_equals($password,$repeat) || !hamun_valid_new_password($password,'')) throw new InvalidArgumentException('رمز و تکرار آن باید یکسان و حداقل ۱۲ نویسه باشند.');
+    $allowed=['bearings','fasteners','packing','machining'];
+    foreach ($sections as $section) if (!is_string($section) || !in_array($section,$allowed,true)) throw new InvalidArgumentException('بخش انتخاب‌شده معتبر نیست.');
+    $sections=array_values(array_unique($sections));
+    $hash=password_hash($password,PASSWORD_DEFAULT);
+    if (!is_string($hash) || $hash==='') throw new RuntimeException('ساخت حساب ممکن نیست.');
+    hamun_accounts(function (&$users) use ($username,$displayName,$role,$sections,$hash) {
+        foreach ($users as $u) if (($u['username']??'')===$username) throw new RuntimeException('این نام کاربری قبلاً ثبت شده است.');
+        $users[]=['id'=>bin2hex(random_bytes(16)),'username'=>$username,'display_name'=>$displayName,'password'=>$hash,'role'=>$role,'developer_access'=>false,'sections'=>$role==='staff'?$sections:[],'enabled'=>true,'version'=>1,'sms_phone'=>'','sms_consent'=>false,'national_digest'=>''];
+    });
+}
+// Create a new accountant; an empty temporary password keeps the existing
+// national-ID-only first-login workflow. Both modes require a new personal password.
+function hamun_create_accountant(string $nationalId, string $displayName, string $temporaryPassword, string $repeat): bool {
+    $nationalId=hamun_national_id($nationalId);
+    if (strlen($displayName)>300 || !preg_match('/^[0-9]{10}$/D',$nationalId)) throw new InvalidArgumentException('نام یا کد ملی حسابدار نامعتبر است.');
+    $digest=hamun_national_digest($nationalId);
+    if (!hash_equals($temporaryPassword,$repeat) || ($temporaryPassword!=='' && !hamun_valid_new_password($temporaryPassword,$digest))) throw new InvalidArgumentException('رمز موقت و تکرار آن باید یکسان و حداقل ۱۲ نویسه باشند.');
+    $credential=$temporaryPassword!==''?$temporaryPassword:$nationalId;
+    $hash=password_hash($credential,PASSWORD_DEFAULT);
+    if (!is_string($hash) || $hash==='') throw new RuntimeException('ساخت حساب ممکن نیست.');
+    hamun_accounts(function (&$users) use ($digest,$displayName,$hash) {
+        foreach ($users as $u) if (!empty($u['national_digest']) && hash_equals((string)$u['national_digest'],$digest)) throw new RuntimeException('این کد ملی قبلاً ثبت شده است.');
+        $id=bin2hex(random_bytes(16));
+        $users[]=['id'=>$id,'username'=>'acc-'.$id,'display_name'=>$displayName,'password'=>$hash,'role'=>'accountant','sections'=>[],'enabled'=>true,'version'=>1,'national_digest'=>$digest,'must_change_password'=>true];
+    });
+    return $temporaryPassword!=='';
 }
 // Only call from an authenticated administrator action protected by CSRF.
 // The temporary password must be changed before any accounting access is granted.

@@ -19,6 +19,14 @@ try {
     owner_check($users[1]['role']==='admin' && $users[1]['developer_access'] && $result['id']===$users[1]['id'],'owner gets developer admin');
     $_SESSION=['user_id'=>$result['id'],'user_version'=>$result['version'],'admin_until'=>time()+600];
     owner_check(hamun_current_user()['id']===$result['id'],'session recognized');
+    try {hamun_set_owner_session_password($result['id'],$result['version'],'short');throw new Exception('short password accepted');} catch(InvalidArgumentException $e) {}
+    $set=hamun_set_owner_session_password($result['id'],$result['version'],'owner-new-password-example');
+    owner_check($set['version']===$result['version']+1 && hamun_current_user()===null,'direct owner password invalidates older session');
+    try {hamun_set_owner_session_password($result['id'],$result['version'],'owner-new-password-example');throw new Exception('stale session accepted');} catch(RuntimeException $e) {}
+    $owner=hamun_accounts(function (&$users)use($result){foreach($users as $u)if($u['id']===$result['id'])return $u;});
+    owner_check(password_verify('owner-new-password-example',$owner['password']),'new password stored as hash');
+    $result['version']=$set['version'];
+    $_SESSION=['user_id'=>$result['id'],'user_version'=>$result['version'],'admin_until'=>time()+600];
     hamun_reset_user_password($result['id'],'owner-password-example');
     owner_check(hamun_current_user()===null,'reset revokes older session');
     $again=hamun_owner_id_only_login('0123456789');
@@ -27,6 +35,7 @@ try {
     try {hamun_owner_id_only_login('0123456789');throw new Exception('disabled owner accepted');} catch(RuntimeException $e) {}
     hamun_accounts(function (&$users)use($result){foreach($users as &$u)if($u['id']===$result['id']){$u['enabled']=true;$u['role']='staff';}});
     try {hamun_owner_id_only_login('0123456789');throw new Exception('staff elevated');} catch(RuntimeException $e) {}
+    try {hamun_set_owner_session_password($result['id'],$again['version'],'another-strong-password');throw new Exception('staff may not set owner password');} catch(RuntimeException $e) {}
     owner_check(count(hamun_accounts(function (&$u){return $u;}))===2,'no duplicate or elevation');
     unlink($root.'/hamun-private/accounts.json');unlink($root.'/hamun-private/password-hash');
     $fresh=hamun_owner_id_only_login('0123456789');

@@ -1,0 +1,11 @@
+@font-face{font-family:Vazirmatn;src:url('/assets/fonts/Vazirmatn-Variable.woff2') format('woff2');font-style:normal;font-weight:100 900;font-display:swap}
+body{font-family:Vazirmatn,Tahoma,sans-serif;-webkit-font-smoothing:antialiased}
+button,input,select{font-family:inherit}
+button{min-height:44px;cursor:pointer}
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #ffbf80;outline-offset:2px}
+.password-visibility{display:inline-block!important;width:auto!important;min-height:36px;padding:.35rem .7rem!important;margin:.25rem!important;border:1px solid #77889a!important;border-radius:.45rem;background:#27384a!important;color:#fff!important;font-size:.85rem!important;vertical-align:middle}
+#quick-create{border:1px solid #e58a3c}
+#quick-create label{display:block}
+#quick-create input:not([type=checkbox]):not([type=hidden]),#quick-create select{max-width:100%}
+details summary{cursor:pointer;color:#ffb776}
+@media(max-width:600px){body{font-size:16px}main{padding:1rem!important;margin:1rem auto;max-width:100%;overflow-wrap:anywhere}form,section{max-width:100%;box-sizing:border-box}input:not([type=checkbox]):not([type=hidden]),select{max-width:100%;min-height:44px;box-sizing:border-box}#quick-create label{display:block}#quick-create input:not([type=checkbox]):not([type=hidden]),#quick-create select{width:100%;margin-inline:0}#quick-create button:not(.password-visibility){width:100%}button{max-width:100%}}
