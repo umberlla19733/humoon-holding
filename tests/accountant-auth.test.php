@@ -78,6 +78,29 @@ try {
     try {hamun_change_own_password($selfId,1,'new-strong-password','another-strong-password');throw new Exception('stale session accepted');} catch(RuntimeException $e) {}
     hamun_accounts(function (&$users)use($selfId){foreach($users as &$u)if($u['id']===$selfId)$u['enabled']=false;});
     try {hamun_change_own_password($selfId,2,'new-strong-password','another-strong-password');throw new Exception('disabled user accepted');} catch(RuntimeException $e) {}
+    // Quick creation of members needs no telephone, preserves roles and validates inputs.
+    hamun_create_quick_member('sample.staff','پرسنل','staff','test-password-strong','test-password-strong',['bearings']);
+    $quick=hamun_accounts(function (&$users){foreach($users as $u)if(($u['username']??'')==='sample.staff')return $u;return null;});
+    check_auth($quick['enabled'] && !$quick['sms_consent'] && $quick['sms_phone']==='' && $quick['sections']===['bearings'] && password_verify('test-password-strong',$quick['password']),'staff created without SMS');
+    try {hamun_create_quick_member('sample.staff','x','staff','test-password-strong','test-password-strong',[]);throw new Exception('duplicate username accepted');} catch(RuntimeException $e) {}
+    try {hamun_create_quick_member('new-user','x','admin','test-password-strong','wrong',[]);throw new Exception('password mismatch accepted');} catch(InvalidArgumentException $e) {}
+    try {hamun_create_quick_member('0123456789','x','staff','test-password-strong','test-password-strong',[]);throw new Exception('ambiguous national id username accepted');} catch(InvalidArgumentException $e) {}
+    try {hamun_create_quick_member('new-user','x','staff','test-password-strong','test-password-strong',['invalid']);throw new Exception('invalid section accepted');} catch(InvalidArgumentException $e) {}
+    hamun_create_quick_member('new-admin','x','admin','test-password-strong','test-password-strong',[]);
+    $newAdmin=hamun_accounts(function (&$users){foreach($users as $u)if(($u['username']??'')==='new-admin')return $u;return null;});
+    check_auth($newAdmin['role']==='admin' && !$newAdmin['developer_access'] && !$newAdmin['sms_consent'],'admin created without SMS or automatic developer privilege');
+    // Accountant creation works without SMS and optionally takes a temporary password.
+    try {hamun_create_accountant('1234567890','test','short','short');throw new Exception('short temporary accepted');} catch(InvalidArgumentException $e) {}
+    try {hamun_create_accountant('1234567890','test','temporary-strong','mismatch');throw new Exception('mismatch accepted');} catch(InvalidArgumentException $e) {}
+    check_auth(hamun_create_accountant('1234567890','test','temporary-strong','temporary-strong'),'temporary password creation');
+    $newDigest=hamun_national_digest('1234567890');
+    $newAccount=hamun_accounts(function (&$users)use($newDigest){foreach($users as $u)if(($u['national_digest']??'')===$newDigest)return $u;return null;});
+    check_auth($newAccount['must_change_password'] && password_verify('temporary-strong',$newAccount['password']) && !isset($newAccount['sms_phone']),'temporary credential and no SMS');
+    try {hamun_create_accountant('1234567890','test','','');throw new Exception('duplicate accepted');} catch(RuntimeException $e) {}
+    check_auth(!hamun_create_accountant('1234567891','test','',''),'ID-only creation remains available');
+    $firstDigest=hamun_national_digest('1234567891');
+    $first=hamun_accounts(function (&$users)use($firstDigest){foreach($users as $u)if(($u['national_digest']??'')===$firstDigest)return $u;return null;});
+    check_auth($first['must_change_password'] && password_verify('1234567891',$first['password']),'ID-only first login still works');
     $digestA=str_repeat('a',64);$digestB=str_repeat('b',64);
     $sample=[['role'=>'staff','national_digest'=>$digestA,'developer_access'=>true],['role'=>'admin','national_digest'=>$digestB,'developer_access'=>true],['role'=>'admin','national_digest'=>$digestA,'developer_access'=>false]];
     check_auth(hamun_find_bot_developer($sample,$digestA)===null,'staff and ordinary admin are not developer');
