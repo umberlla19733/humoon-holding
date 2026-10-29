@@ -74,6 +74,23 @@ function hamun_valid_new_password(string $password, string $nationalDigest): boo
     return true;
 }
 
+// Caller must authenticate the current user and check CSRF and request limits.
+function hamun_change_own_password(string $id, int $version, string $oldPassword, string $newPassword): array {
+    if (strlen($oldPassword)>1024) throw new InvalidArgumentException('رمز فعلی درست نیست.');
+    return hamun_accounts(function (&$users) use ($id,$version,$oldPassword,$newPassword) {
+        foreach ($users as &$account) {
+            if (!hash_equals((string)$account['id'],$id)) continue;
+            if (empty($account['enabled']) || !empty($account['must_change_password']) || (int)$account['version']!==$version) throw new RuntimeException('حساب تغییر کرده است؛ دوباره وارد شوید.');
+            if (!password_verify($oldPassword,(string)($account['password']??''))) throw new InvalidArgumentException('رمز فعلی درست نیست.');
+            if (!hamun_valid_new_password($newPassword,(string)($account['national_digest']??''))) throw new InvalidArgumentException('رمز جدید باید ۱۲ تا ۷۲ بایت و حداقل ۱۲ نویسه غیرخالی باشد.');
+            $hash=password_hash($newPassword,PASSWORD_DEFAULT);
+            if (!is_string($hash) || $hash==='') throw new RuntimeException('تغییر رمز ممکن نیست.');
+            $account['password']=$hash;$account['version']=(int)$account['version']+1;
+            return ['id'=>$account['id'],'version'=>$account['version']];
+        }
+        throw new RuntimeException('حساب پیدا نشد.');
+    });
+}
 // Caller must authenticate an administrator and verify CSRF before invoking this function.
 // Every reset invalidates all existing full and first-login sessions for that account.
 function hamun_reset_user_password(string $id, string $password): array {

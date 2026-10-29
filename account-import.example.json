@@ -1,0 +1,10 @@
+{
+  "accounts": [
+    {"role": "admin", "username": "admin", "display_name": "مدیر", "password": ""},
+    {"role": "accountant", "national_id": "", "display_name": "حسابدار", "password": ""},
+    {"role": "staff", "username": "bearings", "display_name": "بلبرینگ", "password": "", "sections": ["bearings"]},
+    {"role": "staff", "username": "fasteners", "display_name": "پیچ و مهره", "password": "", "sections": ["fasteners"]},
+    {"role": "staff", "username": "packing", "display_name": "پکینگ", "password": "", "sections": ["packing"]},
+    {"role": "staff", "username": "machining", "display_name": "تراشکاری", "password": "", "sections": ["machining"]}
+  ]
+}
