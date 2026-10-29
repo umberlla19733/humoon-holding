@@ -1,26 +1,62 @@
 <?php
 declare(strict_types=1);
-header('Cache-Control: no-store, private'); header('X-Content-Type-Options: nosniff'); header('Referrer-Policy: no-referrer');
-if (empty($_SERVER['HTTPS']) || $_SERVER['HTTPS']==='off') { http_response_code(403); exit('HTTPS required'); }
-ini_set('session.use_strict_mode','1'); ini_set('session.use_only_cookies','1');
-session_set_cookie_params(['httponly'=>true,'secure'=>true,'samesite'=>'Strict','path'=>'/']); session_start();
-require_once __DIR__.'/security-accounts.php';
+header('Cache-Control: no-store, private');header('X-Content-Type-Options: nosniff');header('Referrer-Policy: no-referrer');header('X-Frame-Options: SAMEORIGIN');
+if (empty($_SERVER['HTTPS']) || $_SERVER['HTTPS']==='off') {http_response_code(403);exit('HTTPS required');}
+ini_set('session.use_strict_mode','1');ini_set('session.use_only_cookies','1');
+session_set_cookie_params(['httponly'=>true,'secure'=>true,'samesite'=>'Strict','path'=>'/']);session_start();
+require_once __DIR__.'/security-accounts.php';require_once __DIR__.'/developer-cache-lib.php';
 $user=hamun_current_user();
-if (!$user) { header('Location: /admin-security.php'); exit; }
-if (($user['role']??'')!=='admin') { http_response_code(403); exit('Administrator access required'); }
-$private=dirname(__DIR__).'/hamun-private';
-$privateReady=is_dir($private) && is_writable($private);
-$pdoDrivers=class_exists('PDO') ? PDO::getAvailableDrivers() : [];
-function center_h(string $s): string { return htmlspecialchars($s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); }
-?><!doctype html><html lang="fa" dir="rtl"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>مرکز مدیریت هامون</title><style>body{font:15px sans-serif;background:#121820;color:#eee;line-height:1.9}main{max-width:900px;margin:auto;padding:1rem}section{background:#202a35;border-radius:12px;padding:1rem;margin:1rem 0}a{color:#ffb776}h2{font-size:1.1rem}.warn{color:#ffd27d}small{color:#ccc}</style><main>
-<h1>مرکز مدیریت و وضعیت امکانات</h1><p><a href="/#/admin">بازگشت به پنل مدیریت</a> | <a href="/admin-security.php">خروج از نشست سروری</a></p>
-<p class="warn">این صفحه وضعیت و مسیرهای مدیریت را یک‌جا نشان می‌دهد؛ وجود هر بخش به معنی راه‌اندازی کامل همه سرویس‌ها نیست.</p>
-<section><h2>آمادگی هاست</h2><p>نسخه PHP: <?=center_h(PHP_VERSION)?> | cURL: <?=function_exists('curl_init')?'فعال':'غیرفعال'?> | درایورهای PDO: <?=center_h($pdoDrivers ? implode(', ', $pdoDrivers) : 'هیچ‌کدام')?>.</p><small>این اطلاعات فقط برای بررسی اولیه است؛ اتصال پایگاه داده و تنظیمات امنیتی باید جداگانه آزمایش شوند.</small></section>
-<section><h2>حساب‌ها و دسترسی‌ها</h2><p>ایجاد و غیرفعال‌سازی حساب‌ها و تنظیم رمز و دسترسی بخش‌های موجود.</p><p><a href="/accounts.php">مدیریت حساب‌ها و رمز اعضا</a> | <a href="/change-password.php">تغییر رمز خودم</a></p><small>مجوزهای قدیمی داخل پنل مرورگر با مجوزهای سروری یکسان نیستند.</small></section>
-<section><h2>پیام‌های سایت</h2><p>ثبت و مشاهده درخواست‌ها پس از راه‌اندازی صحیح فضای خصوصی هاست. وضعیت فضای خصوصی: <?= $privateReady?'پوشه قابل نوشتن است':'پوشه موجود یا قابل نوشتن نیست' ?>؛ این بررسی به‌تنهایی صحت امنیت و ذخیره تماس را تضمین نمی‌کند.</p><a href="/contact-inbox.php">کارتابل فرم‌های تماس</a></section>
-<section><h2>حضور و غیاب</h2><p>تأیید موقعیت و بررسی رخدادها در بخش مدیریت تردد؛ موقعیت مرورگر می‌تواند جعل شود.</p><a href="/attendance-admin.php">مدیریت تردد</a> | <a href="/attendance.php">ثبت تردد</a></section>
-<section><h2>پیامک</h2><p class="warn">سرویس‌دهنده هنوز انتخاب نشده؛ پیامک ارسال نمی‌شود. مرکز پیامک فقط پیش‌نویس و قالب دارد.</p><a href="/sms.php">مرکز پیامک و پیش‌نویس‌ها</a></section>
-<section><h2>حسابداری و اطلاعات مشترک</h2><p class="warn">بخش‌هایی از حسابداری و انبار هنوز در مرورگر ذخیره می‌شوند و بین دستگاه‌ها به‌طور مطمئن مشترک نیستند. انتقال امن به سرور و مهاجرت داده‌های فعلی هنوز تکمیل نشده است.</p><a href="/#/admin">ورود به پنل حسابداری</a> | <a href="/central-storage.php">انتقال دستی نسخه مرکزی</a></section>
-<section><h2>دستیار حسابداری</h2><p>راهنمای محلی قاعده‌محور است. مدل مولد نصب یا متصل نیست و پردازش سنگین روی هاست انجام نمی‌شود.</p></section>
-<section><h2>پرداخت آنلاین</h2><p class="warn">اتصال پرداخت و تأیید تراکنش سمت سرور در این نسخه راه‌اندازی و آزموده نشده است؛ برای دریافت وجه به آن اتکا نکنید.</p></section>
-</main></html>
+if (!$user) {header('Location: /admin-security.php');exit;}
+if (($user['role']??'')!=='admin') {http_response_code(403);exit('Administrator access required');}
+if (empty($_SESSION['csrf'])) $_SESSION['csrf']=bin2hex(random_bytes(32));
+$developer=hamun_developer_tools_allowed($user);$notice='';$error='';$browserCacheResponse=false;
+if ($_SERVER['REQUEST_METHOD']==='POST') {
+    $origin=$_SERVER['HTTP_ORIGIN']??'';
+    if (($origin!=='' && $origin!=='https://'.($_SERVER['HTTP_HOST']??'')) || !hash_equals($_SESSION['csrf'],(string)($_POST['csrf']??''))) {http_response_code(403);exit('Invalid request');}
+    if (!$developer) {http_response_code(403);exit('Developer access required');}
+    if (($_POST['confirm']??'')!=='1') {http_response_code(400);$error='برای انجام عملیات، تأیید محدوده را علامت بزنید.';}
+    elseif (($_POST['action']??'')==='browser_cache') {
+        // Only cache, never cookies or storage: browser support varies by vendor.
+        header('Clear-Site-Data: "cache"');
+        $browserCacheResponse=true;
+        $notice='درخواست پاک‌سازی کش به همین مرورگر ارسال شد. تأثیر به پشتیبانی مرورگر بستگی دارد؛ حافظه HTTP تمام برنامه‌های همین دامنه ممکن است پاک شود.';
+    } elseif (($_POST['action']??'')==='php_cache') {
+        if (!function_exists('opcache_invalidate') || !function_exists('opcache_get_status') || @opcache_get_status(false)===false) {
+            http_response_code(503);$error='OPcache در این محیط در دسترس یا فعال نیست؛ هیچ تغییری انجام نشد.';
+        } else {
+            $result=hamun_invalidate_site_php(__DIR__,function(string $path,bool $force):bool{return @opcache_invalidate($path,$force);});
+            $notice='درخواست برای '.$result['attempted'].' فایل PHP این پروژه ارسال شد؛ '.$result['accepted'].' درخواست توسط این پردازش پذیرفته شد. دیگر پردازش‌ها و کش هاست یا CDN ممکن است به پاک‌سازی جداگانه نیاز داشته باشند.';
+        }
+    } else {http_response_code(400);$error='عملیات ناشناخته است.';}
+}
+$private=dirname(__DIR__).'/hamun-private';$privateReady=is_dir($private)&&is_writable($private);
+$pdoDrivers=class_exists('PDO')?PDO::getAvailableDrivers():[];
+$opcacheReady=function_exists('opcache_get_status') && @opcache_get_status(false)!==false;
+$apacheModules=function_exists('apache_get_modules')?apache_get_modules():null;
+$rewrite=is_array($apacheModules)?(in_array('mod_rewrite',$apacheModules,true)?'شناسایی شد':'شناسایی نشد'):'قابل تشخیص نیست';
+function center_h(string $s):string{return htmlspecialchars($s,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8');}
+$token=center_h($_SESSION['csrf']);
+?><!doctype html>
+<html lang="fa" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>پنل توسعه‌دهنده هامون</title><style>
+:root{color-scheme:dark;--bg:#0b111b;--card:#151e2b;--line:#2a384a;--muted:#aab8c8;--text:#eef3f8;--accent:#ff9e4b;--green:#8bdfbd;--warn:#ffca80}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 85% 0%,#20384b 0,transparent 32rem),var(--bg);font:15px/1.9 system-ui,sans-serif;color:var(--text)}main{max-width:1160px;margin:auto;padding:28px 22px 70px}a{color:#ffc28d;text-decoration:none}a:hover{text-decoration:underline}a:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid #ffd08c;outline-offset:3px}header{display:flex;justify-content:space-between;gap:24px;align-items:flex-start;border-bottom:1px solid var(--line);padding:12px 0 24px}.eyebrow{color:var(--accent);font-size:.82rem;font-weight:700;letter-spacing:.08em}.subtitle,.muted{color:var(--muted)}h1{font-size:clamp(1.8rem,4vw,2.5rem);line-height:1.3;margin:.3rem 0}h2{font-size:1.15rem;margin:0 0 .5rem}p{margin:.5rem 0}.toplinks{display:flex;gap:16px;flex-wrap:wrap}.status{display:flex;gap:10px;flex-wrap:wrap;margin:20px 0}.pill{border:1px solid var(--line);border-radius:100px;padding:5px 12px;background:#152333}.pill b{color:var(--green)}.warnbox,.message{border:1px solid #725732;background:#292318;border-radius:12px;padding:14px 18px;margin:18px 0;color:var(--warn)}.message.ok{border-color:#32644f;background:#122920;color:#bcebd6}.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px;margin-top:20px}.card{grid-column:span 4;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;min-width:0}.card.wide{grid-column:span 6}.card.full{grid-column:1/-1}.card p,.card li{color:var(--muted)}.icon{color:var(--accent);font-size:.82rem;font-weight:700;margin-bottom:8px}.links{display:flex;gap:12px 18px;flex-wrap:wrap;margin-top:12px;font-weight:700}.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.metric{background:#101824;border:1px solid var(--line);padding:14px;border-radius:12px}.metric span{display:block;color:var(--muted);font-size:.85rem}.metric strong{font-size:1rem;overflow-wrap:anywhere}.actions{display:grid;grid-template-columns:1fr 1fr;gap:14px}.action{border:1px solid var(--line);border-radius:12px;padding:16px;background:#101824}.action strong{display:block}label{display:flex;gap:8px;align-items:flex-start;color:#d9e3ec;margin:12px 0;cursor:pointer}label input{margin-top:.55em}button{border:1px solid #c47935;background:#e89041;color:#211406;font:inherit;font-weight:800;border-radius:9px;padding:9px 15px;cursor:pointer}button:hover{background:#ffad63}code{direction:ltr;unicode-bidi:isolate;color:#e0edfa}small{color:var(--muted)}ul{padding-right:1.2rem}@media(max-width:760px){header{display:block}.toplinks{margin-top:16px}.card,.card.wide{grid-column:1/-1}.metrics,.actions{grid-template-columns:1fr 1fr}}@media(max-width:480px){main{padding:20px 14px}.metrics,.actions{grid-template-columns:1fr}}
+</style></head><body><main>
+<header><div><div class="eyebrow">HAMUN / DEVELOPER CONSOLE</div><h1>پنل توسعه‌دهنده</h1><p class="subtitle">ابزارهای بررسی، نگهداری و مسیرهای مدیریت سایت در یک صفحه</p></div><nav class="toplinks" aria-label="پیوندهای اصلی"><a href="/">صفحه اصلی</a><a href="/#/admin">پنل مدیریت</a><a href="/admin-security.php">خروج امن</a></nav></header>
+<div class="status"><span class="pill">نشست: <b>مدیر سروری</b></span><span class="pill">ابزارهای توسعه‌دهنده: <b><?=$developer?'فعال':'غیرفعال'?></b></span><span class="pill">PHP: <b><?=center_h(PHP_VERSION)?></b></span></div>
+<?php if (is_file(__DIR__.'/owner-login.php')): ?><div class="warnbox"><strong>هشدار امنیتی مهم:</strong> مسیر ورود توسعه‌دهنده فقط با کد ملی در این نسخه وجود دارد. هر کسی که آن را بداند ممکن است به مدیریت و ابزارهای این صفحه دسترسی پیدا کند؛ تنظیم رمز جداگانه این مسیر را غیرفعال نمی‌کند.</div><?php endif ?>
+<?php if ($notice):?><div class="message ok" role="status"><?=center_h($notice)?></div><?php endif ?><?php if ($error):?><div class="message" role="alert"><?=center_h($error)?></div><?php endif ?>
+<?php if ($browserCacheResponse):?><p><a href="/admin-center.php">بازگشت به پنل توسعه‌دهنده</a></p><?php endif ?>
+<div class="grid">
+<section class="card full" aria-labelledby="health"><div class="icon">SYSTEM / 01</div><h2 id="health">وضعیت اولیه هاست</h2><p>این شاخص‌ها فقط تشخیص اولیه‌اند؛ امنیت و عملکرد واقعی هاست را تضمین نمی‌کنند.</p><div class="metrics"><div class="metric"><span>نسخه PHP</span><strong><?=center_h(PHP_VERSION)?></strong></div><div class="metric"><span>فضای خصوصی</span><strong><?=$privateReady?'قابل نوشتن':'نیازمند بررسی'?></strong></div><div class="metric"><span>PHP OPcache</span><strong><?=$opcacheReady?'فعال':'نامشخص یا غیرفعال'?></strong></div><div class="metric"><span>Apache Rewrite</span><strong><?=center_h($rewrite)?></strong></div></div><p><small>cURL: <?=function_exists('curl_init')?'فعال':'غیرفعال'?> · درایورهای PDO: <?=center_h($pdoDrivers?implode(', ',$pdoDrivers):'هیچ‌کدام')?>. وضعیت دامنه‌های دیگر و دسترسی مستقیم به فایل‌ها باید جداگانه آزمایش شود.</small></p></section>
+<section class="card full" aria-labelledby="cache"><div class="icon">MAINTENANCE / 02</div><h2 id="cache">مدیریت کش</h2><p>این ابزارها داده حسابداری، رمزها، نشست و localStorage را عمداً حذف نمی‌کنند. این پروژه کش مرکزی یا اتصال پاک‌سازی CDN ندارد.</p>
+<?php if (!$developer):?><div class="warnbox">برای اجرای ابزارهای کش، حساب شما باید علاوه بر نقش مدیر، گزینه دسترسی توسعه‌دهنده فعال داشته باشد. پیوندهای مدیریت زیر همچنان قابل استفاده‌اند.</div><?php else:?><div class="actions">
+<form class="action" method="post"><strong>کش همین مرورگر</strong><p>درخواست پاک‌سازی کش تمام برنامه‌های همین دامنه را فقط به این مرورگر می‌فرستد؛ موفقیت به پشتیبانی مرورگر بستگی دارد. کوکی و localStorage هدف قرار نمی‌گیرند.</p><input type="hidden" name="csrf" value="<?=$token?>"><input type="hidden" name="action" value="browser_cache"><label><input type="checkbox" name="confirm" value="1" required>متوجه محدوده همین مرورگر و دامنه هستم.</label><button type="submit">درخواست پاک‌سازی کش مرورگر</button></form>
+<form class="action" method="post"><strong>کش PHP همین پروژه</strong><p>درخواست ابطال OPcache را برای فهرست محدود فایل‌های PHP این پروژه می‌فرستد، نه پاک‌سازی سراسری هاست. نتیجه سایر پردازش‌ها، HTML، تصاویر یا CDN را تضمین نمی‌کند.</p><input type="hidden" name="csrf" value="<?=$token?>"><input type="hidden" name="action" value="php_cache"><label><input type="checkbox" name="confirm" value="1" required>محدوده درخواست OPcache را متوجه شدم.</label><button type="submit">ابطال کش PHP پروژه</button></form></div><?php endif ?>
+<p><small>برای CDN یا کش LiteSpeed/cPanel باید از ابزار همان سرویس استفاده کنید. برای همه کاربران دیگر، این دکمه کش مرورگرهایشان را پاک نمی‌کند.</small></p></section>
+<section class="card wide"><div class="icon">ACCESS / 03</div><h2>حساب‌ها و امنیت</h2><p>ایجاد یا غیرفعال‌سازی حساب و تغییر رمز و دسترسی اعضا؛ مجوزهای قدیمی مرورگر مستقل هستند.</p><div class="links"><a href="/accounts.php">مدیریت حساب‌ها</a><a href="/change-password.php">تغییر رمز خودم</a></div></section>
+<section class="card wide"><div class="icon">DATA / 04</div><h2>حسابداری و ذخیره مرکزی</h2><p>داده‌های قدیمی در بخش‌هایی محلی‌اند. انتقال مرکزی فعلاً دستی است، نه همگام‌سازی خودکار چندکاربره.</p><div class="links"><a href="/#/admin">پنل حسابداری</a><a href="/central-storage.php">انتقال دستی اطلاعات</a></div></section>
+<section class="card"><div class="icon">CONTACT / 05</div><h2>پیام‌های سایت</h2><p>بررسی پیام‌های ثبت‌شده در کارتابل مستقل سروری.</p><div class="links"><a href="/contact-inbox.php">کارتابل تماس</a></div></section>
+<section class="card"><div class="icon">ATTENDANCE / 06</div><h2>حضور و غیاب</h2><p>تأیید موقعیت و بررسی تردد. موقعیت مرورگر قابل جعل است.</p><div class="links"><a href="/attendance-admin.php">مدیریت تردد</a><a href="/attendance.php">ثبت تردد</a></div></section>
+<section class="card"><div class="icon">MESSAGING / 07</div><h2>پیامک</h2><p>فعلاً قالب و پیش‌نویس است؛ بدون اتصال ارائه‌دهنده، پیامکی ارسال نمی‌شود.</p><div class="links"><a href="/sms.php">مرکز پیامک</a></div></section>
+<section class="card wide"><div class="icon">CHECKLIST / 08</div><h2>چک‌لیست انتشار</h2><ul><li>پیش از آپلود از فایل‌ها، داده‌ها و پوشه خصوصی پشتیبان بگیرید.</li><li>پس از انتشار، ورود و دسترسی مستقیم به داده‌های خصوصی را روی HTTPS آزمایش کنید.</li><li>درستی فایل‌های <code>.htaccess</code>، مسیر خصوصی، دامنه‌های دیگر و کش CDN را بررسی کنید.</li></ul></section>
+<section class="card wide"><div class="icon">SERVICES / 09</div><h2>محدودیت سرویس‌ها</h2><p>دستیار حسابداری محلی و قاعده‌محور است؛ مدل مولد متصل نیست. پرداخت آنلاین و تأیید تراکنش سمت سرور در این نسخه راه‌اندازی و آزمایش نشده است.</p><div class="links"><a href="/admin-security.php">وضعیت نشست و خروج</a></div></section>
+</div></main></body></html>
